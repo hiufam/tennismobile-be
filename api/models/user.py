@@ -1,31 +1,123 @@
-"""Declare models and relationships."""
-from sqlalchemy import Column, Integer, String, DateTime, Boolean
+import datetime
+import re
+
+from sqlalchemy.orm import validates
+from sqlalchemy import Column, Date, Integer, String, DateTime, Boolean
 from sqlalchemy.ext.declarative import declarative_base
 
-from ..database import engine
+from ..database import engine, session
 
 Base = declarative_base()
 
-"""User Model"""
 class User(Base):
     __tablename__ ='users'
 
     id = Column(Integer, primary_key=True)
-    phone_number = Column(Integer, nullable=False)
+    phone_number = Column(Integer, nullable=False, unique=True)
     facebook_account = Column(String(50), nullable=True)
     google_account = Column(String(50), nullable=True)
-    full_name = Column(String(50), nullable=False)
-    date_of_birth = Column(String, nullable=False)
+    full_name = Column(String, nullable=False)
+    date_of_birth = Column(Date, nullable=False)
     gender = Column(String, nullable=False)
     singles_skill = Column(Integer, nullable=False, default=0)
     doubles_skill = Column(Integer, nullable=False, default=0)
-    registration_otp = Column(Integer, nullable=True)
-    registration_otp_expiration = Column(DateTime, nullable=True)
     avatar = Column(String, nullable=True)
+    
+    registration_otp = Column(String, nullable=True)
+    registration_otp_expiration = Column(DateTime, nullable=True)
     is_verify = Column(Boolean, nullable=False, default=False)
 
     def __repr__(self):
-        return f'<User ID={self.id}, full_name={self.full_name}>'
+        return f'<UserID={self.id}FullName={self.full_name}>'
+
+    # @validates('phone_number')
+    # def validate_phone_number(self, key, phone_number):
+    #     if not phone_number:
+    #         raise AssertionError('No phone number provided')
+
+    #     if session.query(User).filter(User.phone_number == phone_number).scalar() is not None:
+    #         print(type(User))
+    #         raise AssertionError('Phone number has already been registered') 
+        
+    #     if not str(phone_number).isdigit():
+    #         raise AssertionError('Phone number contains character')
+
+    #     if len(str(phone_number)) != 10:
+    #         raise ValueError('Phone number requires 10 digits') 
+        
+    #     return phone_number
 
 
+    # @validates('facebook_account')
+    # def validate_facebook_account(self, key, facebook_account):
+    #     if not facebook_account:
+    #         raise AssertionError('No facebook account provided')
+        
+    #     return facebook_account
+    
+    # @validates('google_account')
+    # def validate_email(self, key, google_account):
+    #     if not google_account:
+    #         raise AssertionError('No google account provided')
+        
+    #     if not re.match("[^@]+@[^@]+\.[^@]+", google_account):
+    #         raise AssertionError('Provided google account is not an google account address') 
+        
+    #     return google_account
+    
+    # @validates('full_name')
+    # def validate_username(self, key, full_name):
+    #     if not full_name or not len(full_name) > 0:
+    #         raise AssertionError('No full_name provided')
+        
+    #     return full_name
+        
+    # @validates('date_of_birth')
+    # def validate_date_of_birth(self, key, date_of_birth):
+    #     if not date_of_birth:
+    #         raise AssertionError('No date of birth provided')
+        
+    #     if type(date_of_birth) is str:
+    #         date_of_birth = datetime.datetime.strptime(date_of_birth, "%m/%d/%Y").date()
+
+    #     if date_of_birth > datetime.datetime.now().date():
+    #         raise AssertionError("Date of birth cannot pass the next day")
+        
+    #     return date_of_birth
+
+    # @validates('gender')
+    # def validate_gender(self, key, gender):
+    #     if not gender:
+    #         raise AssertionError('No gender provided')
+        
+    #     if not gender == 'Male' or not gender == 'Female':
+    #         raise ValueError('No such gender exist')
+        
+    #     return gender
+        
+    # @validates('singles_skill')
+    # def validate_singles_skill(self, key, singles_skill):
+    #     if not singles_skill:
+    #         raise AssertionError('No singles skill provided')
+        
+    #     if singles_skill < 0 and singles_skill > 10:
+    #         raise ValueError('Singles skill can only range from 0 to 10')
+        
+    #     return singles_skill
+        
+    # @validates('doubles_skill')
+    # def validate_singles_skill(self, key, doubles_skill):
+    #     if not doubles_skill:
+    #         raise AssertionError('No doubles skill provided')
+        
+    #     if doubles_skill < 0 and doubles_skill > 10:
+    #         raise ValueError('doubles skill can only range from 0 to 10')
+        
+    #     return doubles_skill
+    
+    # @validates('avatar')
+    # def validate_avatar(self, key, avatar):
+    #     if not avatar:
+    #         raise AssertionError('No avatar provided')
+        
 Base.metadata.create_all(engine)
