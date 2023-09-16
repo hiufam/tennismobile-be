@@ -1,50 +1,45 @@
 import datetime
-import random
-import string
 
 from flask import Blueprint, jsonify, request
 
-from ..controllers.registration import new_user
+from ..models.user import User
+from ..database import session
 
 auth = Blueprint('auth', __name__, url_prefix='/api/auth')
 
 @auth.get('/otp/create')
 def get_otp():
-    if not new_user.phone_number:
+    phone_number = request.json['phone_number']
+
+    user : User = session.query(User).filter(User.phone_number == phone_number).scalar()
+
+    if not user:
         return jsonify(), 200
 
-    new_user.registration_otp_expiration = datetime.datetime.now() + datetime.timedelta(seconds=1)
-    new_user.registration_otp = create_otp()
+    user.generate_otp()
     
     return jsonify({
-        'OTP': f'{new_user.registration_otp}'
+        'user': {
+            'phone_number': user.phone_number,
+            'registration_otp': user.registration_otp
+        }
     }), 200
 
 
 @auth.post('/otp/verify')
 def verify_otp(): 
     otp_code = request.json['otp_code']
+    phone_number = request.json['phone_number']
 
-    if datetime.datetime.now() > new_user.registration_otp_expiration:
-        return jsonify({
-            'error': 'Expired OTP'
-        }), 400
-    
-    if otp_code != new_user.registration_otp:
+    user = session.query(User).filter(User.phone_number == phone_number).scalar()
+
+    if datetime.datetime.now() > user.registration_otp_expiration or otp_code != user.registration_otp:
         return jsonify({
             'error': 'Invalid OTP'
         }), 400
 
     return jsonify({
         'user': {
-            'phone_number': new_user.phone_number
+            'phone_number': user.phone_number
         }
     }), 200
-
-
-def create_otp(digits=6):
-    otp = ''
-    for _ in range(digits):
-        otp += random.choice(string.digits)
-
-    return otp

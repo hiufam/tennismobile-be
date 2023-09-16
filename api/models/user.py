@@ -1,5 +1,7 @@
 import datetime
 import re
+import random
+import string
 
 from sqlalchemy.orm import validates
 from sqlalchemy import Column, Date, Integer, String, DateTime, Boolean
@@ -16,9 +18,9 @@ class User(Base):
     phone_number = Column(Integer, nullable=False, unique=True)
     facebook_account = Column(String(50), nullable=True)
     google_account = Column(String(50), nullable=True)
-    full_name = Column(String, nullable=False)
-    date_of_birth = Column(Date, nullable=False)
-    gender = Column(String, nullable=False)
+    full_name = Column(String, nullable=True)
+    date_of_birth = Column(Date, nullable=True)
+    gender = Column(String, nullable=True)
     singles_skill = Column(Integer, nullable=False, default=0)
     doubles_skill = Column(Integer, nullable=False, default=0)
     avatar = Column(String, nullable=True)
@@ -29,23 +31,35 @@ class User(Base):
 
     def __repr__(self):
         return f'<UserID={self.id}FullName={self.full_name}>'
+    
+    def generate_otp(self, digits=6):
+        otp = ''
+        for _ in range(digits):
+            otp += random.choice(string.digits)
 
-    # @validates('phone_number')
-    # def validate_phone_number(self, key, phone_number):
-    #     if not phone_number:
-    #         raise AssertionError('No phone number provided')
+        self.registration_otp_expiration = datetime.datetime.now() + datetime.timedelta(seconds=1)
+        self.registration_otp = otp
 
-    #     if session.query(User).filter(User.phone_number == phone_number).scalar() is not None:
-    #         print(type(User))
-    #         raise AssertionError('Phone number has already been registered') 
+        session.commit()
+
+        return otp
+
+    @validates('phone_number')
+    def validate_phone_number(self, key, phone_number):
+        if not phone_number:
+            raise AssertionError('No phone number provided')
+
+        if session.query(User).filter(User.phone_number == phone_number).scalar() is not None:
+            print(type(User))
+            raise AssertionError('Phone number has already been registered') 
         
-    #     if not str(phone_number).isdigit():
-    #         raise AssertionError('Phone number contains character')
+        if not str(phone_number).isdigit():
+            raise AssertionError('Phone number contains character')
 
-    #     if len(str(phone_number)) != 10:
-    #         raise ValueError('Phone number requires 10 digits') 
+        if len(str(phone_number)) != 10:
+            raise ValueError('Phone number requires 10 digits') 
         
-    #     return phone_number
+        return phone_number
 
 
     # @validates('facebook_account')
