@@ -43,6 +43,10 @@ class User(Base):
         session.commit()
 
         return otp
+    
+    def isValidOtp(self, otp_code):
+        if self.registration_otp_expiration > datetime.datetime.now() and otp_code == self.registration_otp:
+            return True
 
     @validates('phone_number')
     def validate_phone_number(self, key, phone_number):

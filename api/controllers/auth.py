@@ -30,10 +30,10 @@ def get_otp():
 def verify_otp(): 
     otp_code = request.json['otp_code']
     phone_number = request.json['phone_number']
+    
+    user : User = session.query(User).filter(User.phone_number == phone_number).scalar()
 
-    user = session.query(User).filter(User.phone_number == phone_number).scalar()
-
-    if datetime.datetime.now() > user.registration_otp_expiration or otp_code != user.registration_otp:
+    if not user.isValidOtp(otp_code):
         return jsonify({
             'error': 'Invalid OTP'
         }), 400
