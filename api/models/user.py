@@ -3,15 +3,13 @@ import re
 import random
 import string
 
-from sqlalchemy.orm import validates
-from sqlalchemy import Column, Date, Integer, String, DateTime, Boolean
-from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import validates, relationship
+from sqlalchemy import Column, Date, ForeignKey, Integer, String, DateTime, Boolean
 
 from ..database import engine, session
+from ..models import BaseModel
 
-Base = declarative_base()
-
-class User(Base):
+class User(BaseModel):
     __tablename__ ='users'
 
     id = Column(Integer, primary_key=True)
@@ -24,6 +22,9 @@ class User(Base):
     singles_skill = Column(Integer, nullable=False, default=0)
     doubles_skill = Column(Integer, nullable=False, default=0)
     avatar = Column(String, nullable=True)
+    club_id = Column(Integer, ForeignKey('clubs.id'))
+
+    club = relationship('Club', back_populates='users')
     
     registration_otp = Column(String, nullable=True)
     registration_otp_expiration = Column(DateTime, nullable=True)
@@ -32,6 +33,10 @@ class User(Base):
     def __repr__(self):
         return f'<UserID={self.id}FullName={self.full_name}>'
     
+    def isValidOtp(self, otp_code):
+        if self.registration_otp_expiration > datetime.datetime.now() and otp_code == self.registration_otp:
+            return True
+
     def generate_otp(self, digits=6):
         otp = ''
         for _ in range(digits):
@@ -43,10 +48,6 @@ class User(Base):
         session.commit()
 
         return otp
-    
-    def isValidOtp(self, otp_code):
-        if self.registration_otp_expiration > datetime.datetime.now() and otp_code == self.registration_otp:
-            return True
 
     @validates('phone_number')
     def validate_phone_number(self, key, phone_number):
@@ -137,5 +138,3 @@ class User(Base):
     # def validate_avatar(self, key, avatar):
     #     if not avatar:
     #         raise AssertionError('No avatar provided')
-        
-Base.metadata.create_all(engine)

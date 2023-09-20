@@ -17,7 +17,7 @@ new_user = {
     'doubles_skill': 3,
 }
 
-# response = requests.post(url=BASE + 'api/registration/phone-number', json=new_phone_number)
+response = requests.post(url=BASE + 'api/registration/phone-number', json=new_phone_number)
 
 response = requests.get(url=BASE + 'api/auth/otp/create', json=new_phone_number)
 
